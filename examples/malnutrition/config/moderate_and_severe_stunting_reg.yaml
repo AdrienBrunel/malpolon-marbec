@@ -1,0 +1,97 @@
+hydra:
+  run:
+    dir: ${data.root}/outputs/${run.run_name}
+  sweep:
+    dir: ${data.root}/outputs/${run.run_name}
+    subdir: Seed-${run.seed}
+run:
+  inference: true
+  testing: false
+  interpretable: false
+  exp_name: malnutrition_test
+  run_name: ${run.exp_name}-${now:%Y-%m-%d_%H-%M}
+  checkpoint_path: ${data.root}/outputs/ckpt/last.ckpt
+  pa_predictions_path: null
+  finetuning_mode: null
+  seed: 12
+data:
+  root: /home/adrien/Documents/post-doc-DL/code/malpolon-marbec/examples/malnutrition
+  inputs_path: ${data.root}/data/inputs
+  dataset_name: malnutrition_dataset_malpolon.csv #???? X_21x21.npy, X_11x11.npy, y_moderate_and_severe_stunting.npy # (40723, 45, 21, 21) # (40723, 9, 11, 11)
+  num_classes: 1
+  train_batch_size: 32
+  inference_batch_size: 64
+  num_workers: 2
+trainer:
+  accelerator: "auto"
+  devices: "auto"
+  max_epochs: 25
+  val_check_interval: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 100
+  detect_anomaly: false
+model:
+  num_species: ${data.num_classes}
+  aggregator: MLP
+  freeze_submodels: true
+  submodels:
+    21x21:
+      provider_name: torchvision
+      model_name: resnet18
+      checkpoint: ${data.root}/outputs/ckpt/last.ckpt
+      model_kwargs:
+        weights: IMAGENET1K_V1
+      modifiers:
+        change_last_layer:
+          num_outputs: ${model.num_species}
+        change_first_convolutional_layer:
+          num_input_channels: 45
+    11x11:
+      provider_name: torchvision
+      model_name: resnet18
+      checkpoint: ${data.root}/outputs/ckpt/last.ckpt
+      model_kwargs:
+        weights: IMAGENET1K_V1
+      modifiers:
+        change_last_layer:
+          num_outputs: ${model.num_species}
+        change_first_convolutional_layer:
+          num_input_channels: 9
+    srtm_3as:
+      provider_name: torchvision
+      model_name: resnet18
+      checkpoint: ${data.root}/outputs/ckpt/last.ckpt
+      model_kwargs:
+        weights: IMAGENET1K_V1
+      modifiers:
+        change_last_layer:
+          num_outputs: ${model.num_species}
+        change_first_convolutional_layer:
+          num_input_channels: 1
+optim:
+  optimizer:
+    adamw:
+      kwargs:
+        lr: 1e-4
+        weight_decay: 1e-4
+      scheduler: 
+        reduce_lr_on_plateau:
+          kwargs:
+            patience: 6
+            eps: 1e-9
+            factor: 0.2
+          lr_scheduler_config:
+            monitor: loss/val
+  loss: "mse_loss"
+  metrics:
+    r2:
+      callable: "Fmetrics.regression.r2_score"
+      kwargs:
+        multioutput: "uniform_average"
+    mae:
+      callable: "Fmetrics.regression.mean_absolute_error"
+      kwargs:
+        num_outputs: 1
+loggers:
+  log_dir_name: ${data.root}/outputs/logs/
+
