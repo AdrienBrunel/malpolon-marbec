@@ -3,6 +3,7 @@
 .*
 *.pyc
 *.egg-info
+*.code-workspace
 
 !.gitignore
 
