@@ -5,10 +5,10 @@ hydra:
     dir: ${data.root}/outputs/${run.run_name}
     subdir: Seed-${run.seed}
 run:
-  inference: true
+  inference: false
   testing: false
   interpretable: false
-  exp_name: malnutrition_test
+  exp_name: malnutrition_training_v0
   run_name: ${run.exp_name}-${now:%Y-%m-%d_%H-%M}
   checkpoint_path: ${data.root}/outputs/ckpt/last.ckpt
   pa_predictions_path: null
@@ -17,7 +17,7 @@ run:
 data:
   root: /home/adrien/Documents/post-doc-DL/code/malpolon-marbec/examples/malnutrition
   inputs_path: ${data.root}/data/inputs
-  dataset_name: malnutrition_dataset_malpolon.csv #???? X_21x21.npy, X_11x11.npy, y_moderate_and_severe_stunting.npy # (40723, 45, 21, 21) # (40723, 9, 11, 11)
+  dataset_name: malnutrition_dataset_malpolon.csv
   num_classes: 1
   train_batch_size: 32
   inference_batch_size: 64
