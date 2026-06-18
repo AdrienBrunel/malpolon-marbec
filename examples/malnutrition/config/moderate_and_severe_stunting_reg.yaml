@@ -10,7 +10,7 @@ run:
   interpretable: false
   exp_name: malnutrition_training_v0
   run_name: ${run.exp_name}-${now:%Y-%m-%d_%H-%M}
-  checkpoint_path: ${data.root}/outputs/ckpt/last.ckpt
+  checkpoint_path: null
   pa_predictions_path: null
   finetuning_mode: null
   seed: 12
@@ -35,10 +35,10 @@ model:
   aggregator: MLP
   freeze_submodels: true
   submodels:
-    21x21:
+    modality_21x21:
       provider_name: torchvision
       model_name: resnet18
-      checkpoint: ${data.root}/outputs/ckpt/last.ckpt
+      checkpoint: null
       model_kwargs:
         weights: IMAGENET1K_V1
       modifiers:
@@ -46,10 +46,10 @@ model:
           num_outputs: ${model.num_species}
         change_first_convolutional_layer:
           num_input_channels: 45
-    11x11:
+    modality_11x11:
       provider_name: torchvision
       model_name: resnet18
-      checkpoint: ${data.root}/outputs/ckpt/last.ckpt
+      checkpoint: null
       model_kwargs:
         weights: IMAGENET1K_V1
       modifiers:
@@ -57,10 +57,10 @@ model:
           num_outputs: ${model.num_species}
         change_first_convolutional_layer:
           num_input_channels: 9
-    srtm_3as:
+    modality_srtm:
       provider_name: torchvision
       model_name: resnet18
-      checkpoint: ${data.root}/outputs/ckpt/last.ckpt
+      checkpoint: null
       model_kwargs:
         weights: IMAGENET1K_V1
       modifiers:
