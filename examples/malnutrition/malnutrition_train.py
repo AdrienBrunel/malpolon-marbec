@@ -83,7 +83,7 @@ def dictMSE(predictions, targets):
 # ==================================================== #
 # HYDRA MAIN
 # ==================================================== #    
-@hydra.main(version_base="1.3", config_path="config", config_name="rls_aus_reg")
+@hydra.main(version_base="1.3", config_path="config", config_name="moderate_and_severe_stunting_reg")
 def main(cfg: DictConfig) -> None:
 
     pl.seed_everything(cfg.run.seed, workers=True)
