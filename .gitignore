@@ -14,6 +14,7 @@ examples/POPDENS/inputs/**
 examples/POPDENS/logs
 examples/malnutrition/data/**
 examples/malnutrition/outputs/**
+examples/malnutrition/logs/**
 
 # Packaging
 dist/
