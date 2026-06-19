@@ -66,8 +66,10 @@ class BaseDataModule(pl.LightningDataModule, ABC):
         self.inference_batch_size = inference_batch_size
         self.num_workers = num_workers
 
-        # TODO check if uses GPU or not before using pin memory
-        self.pin_memory = True
+        # # TODO check if uses GPU or not before using pin memory
+        # self.pin_memory = True
+        self.pin_memory = False
+
 
         self.dataset_train = None
         self.dataset_val = None
@@ -430,6 +432,12 @@ class RLSDataset(Dataset):
             filename = Path(inputs_path) / "dhw" / (survey_id + '.npy')
             x = np.load(filename).astype(np.float32)
             return torch.unsqueeze(torch.from_numpy(x),0)
+        
+        elif modality in ('modality_11x11', 'modality_21x21', 'modality_srtm'):
+            # 2D data
+            filename = Path(inputs_path) / modality / (survey_id + '.npy')
+            x = np.load(filename).astype(np.float32)
+            return torch.from_numpy(x)
             
         else:
             # 1D data
@@ -536,6 +544,7 @@ class RLSDataModule(BaseDataModule):
         inference_batch_size: int = 256,
         num_workers: int = 8,
         target_transform: Callable = None,
+        # modality_names: Optional[dict[str, str]] = ["modality_11x11", "modality_21x21", "modality_srtm"],
         modality_names: Optional[dict[str, str]] = ["env", "hum", "sat"],
         mask_inputs: float = 0.0,
         mae_patch_size: int = 4,
@@ -692,6 +701,8 @@ class RLSDataModule(BaseDataModule):
     def get_data_sizes(self):
 
         """ get input data sizes per modality """
+        print("dataset name:", self.dataset_name)
+        print("dataset inputs_path:", self.inputs_path)
 
         ds = self.get_dataset("test", transform=self.train_transform)
 
