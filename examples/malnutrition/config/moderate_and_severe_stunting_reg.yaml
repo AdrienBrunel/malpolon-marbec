@@ -45,7 +45,7 @@ model:
         change_last_layer:
           num_outputs: ${model.num_species}
         change_first_convolutional_layer:
-          num_input_channels: 45
+          num_input_channels: 39
     modality_11x11:
       provider_name: torchvision
       model_name: resnet18
@@ -93,5 +93,5 @@ optim:
       kwargs:
         num_outputs: 1
 loggers:
-  log_dir_name: ${data.root}/outputs/logs/
+  log_dir_name: ${data.root}/logs
 
