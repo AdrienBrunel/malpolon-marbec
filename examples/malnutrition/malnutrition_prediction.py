@@ -28,6 +28,7 @@ import torch
 import torchmetrics.functional as Fmetrics
 
 import numpy as np
+import pandas as pd
 
 # from deep_utils import *
 
@@ -83,7 +84,7 @@ def dictMSE(predictions, targets):
 # ==================================================== #
 # HYDRA MAIN
 # ==================================================== #    
-@hydra.main(version_base="1.3", config_path="config", config_name="moderate_and_severe_stunting_reg")
+@hydra.main(version_base="1.3", config_path="config", config_name="moderate_and_severe_stunting_pred")
 def main(cfg: DictConfig) -> None:
 
     pl.seed_everything(cfg.run.seed, workers=True)
@@ -122,9 +123,44 @@ def main(cfg: DictConfig) -> None:
 
     trainer = pl.Trainer(logger=[logger_csv, logger_tb], callbacks=callbacks, **cfg.trainer)
 
-    # Training 
-    trainer.fit(reg_system, datamodule=datamodule)
-    trainer.validate(reg_system, datamodule=datamodule)
+    # Training / Inference
+    if cfg.run.inference:
+
+        print(reg_system)
+        predictions = reg_system.predict(datamodule, trainer)
+
+        if cfg.run.testing:
+        
+            # Filtered
+            if "filtered" in cfg.optim.loss:
+                
+                presence = pd.read_csv(cfg.run.pa_predictions_path, index_col='survey_id')
+                predictions = predictions.detach().cpu().numpy() * presence.to_numpy()
+                
+            # Predictions on test subset
+                
+            datamodule.export_predictions(predictions,
+                                          out_dir=Path(cfg.run.checkpoint_path).parent,
+                                          out_name='predictions-malnutrition')
+                      
+            # Predictions on train+val subset
+            cfgtrainval = copy.deepcopy(cfg)
+            cfgtrainval.data.dataset_name = cfg.data.dataset_name.split('.')[0] + '_trainval' + '.csv'
+            tv_datamodule = RLSDataModule(**cfgtrainval.data,
+                                          modality_names= list(cfg.model.submodels.keys()),
+                                          target_transform=None)
+
+            tv_predictions = reg_system.predict(tv_datamodule, trainer)
+            tv_datamodule.export_predictions(tv_predictions,
+                                     out_dir=Path(cfg.run.checkpoint_path).parent,
+                                     out_name='predictions-malnutrition-trainval')
+        
+        else:
+            
+            # Predictions on new data set
+            datamodule.export_predictions(predictions,
+                                          out_dir=Path(hydra.core.hydra_config.HydraConfig.get().runtime.output_dir),
+                                          out_name='predictions-malnutrition')
 
 
 if __name__ == "__main__":

@@ -1,0 +1,97 @@
+hydra:
+  run:
+    dir: ${data.root}/outputs/${run.run_name}
+  sweep:
+    dir: ${data.root}/outputs/${run.run_name}
+    subdir: Seed-${run.seed}
+run:
+  inference: true
+  testing: true
+  interpretable: false
+  exp_name: malnutrition_training_v0
+  run_name: ${run.exp_name}-${now:%Y-%m-%d_%H-%M}
+  checkpoint_path: ${data.root}/outputs/malnutrition_training_v0-2026-06-19_09-45/last.ckpt
+  pa_predictions_path: null
+  finetuning_mode: null
+  seed: 12
+data:
+  root: /home/adrien/Documents/post-doc-DL/code/malpolon-marbec/examples/malnutrition
+  inputs_path: ${data.root}/data/inputs
+  dataset_name: malnutrition_dataset_malpolon.csv
+  num_classes: 1
+  train_batch_size: 32
+  inference_batch_size: 64
+  num_workers: 2
+trainer:
+  accelerator: "auto"
+  devices: "auto"
+  max_epochs: 25
+  val_check_interval: 100
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 100
+  detect_anomaly: false
+model:
+  num_species: ${data.num_classes}
+  aggregator: MLP
+  freeze_submodels: true
+  submodels:
+    modality_21x21:
+      provider_name: torchvision
+      model_name: resnet18
+      checkpoint: null
+      model_kwargs:
+        weights: IMAGENET1K_V1
+      modifiers:
+        change_last_layer:
+          num_outputs: ${model.num_species}
+        change_first_convolutional_layer:
+          num_input_channels: 39
+    modality_11x11:
+      provider_name: torchvision
+      model_name: resnet18
+      checkpoint: null
+      model_kwargs:
+        weights: IMAGENET1K_V1
+      modifiers:
+        change_last_layer:
+          num_outputs: ${model.num_species}
+        change_first_convolutional_layer:
+          num_input_channels: 9
+    modality_srtm:
+      provider_name: torchvision
+      model_name: resnet18
+      checkpoint: null
+      model_kwargs:
+        weights: IMAGENET1K_V1
+      modifiers:
+        change_last_layer:
+          num_outputs: ${model.num_species}
+        change_first_convolutional_layer:
+          num_input_channels: 1
+optim:
+  optimizer:
+    adamw:
+      kwargs:
+        lr: 1e-4
+        weight_decay: 1e-4
+      scheduler: 
+        reduce_lr_on_plateau:
+          kwargs:
+            patience: 6
+            eps: 1e-9
+            factor: 0.2
+          lr_scheduler_config:
+            monitor: loss/val
+  loss: "mse_loss"
+  metrics:
+    r2:
+      callable: "Fmetrics.regression.r2_score"
+      kwargs:
+        multioutput: "uniform_average"
+    mae:
+      callable: "Fmetrics.regression.mean_absolute_error"
+      kwargs:
+        num_outputs: 1
+loggers:
+  log_dir_name: ${data.root}/logs
+
