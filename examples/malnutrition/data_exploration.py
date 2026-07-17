@@ -10,19 +10,28 @@ from examples.malnutrition.src import utils
 
 
 # ==================================================== #
+# PARAMETERS
+# ==================================================== #
+modalities = ["mod_bb20km_123y", "mod_bb50km_123y", "mod_bb100km_123y"]#, "mod_images"]
+data_names = ["bb20km", "bb50km", "bb100km"]#, "images"]
+study_name = "malnutrition_training_mod_bb20_bb50_bb100_img_123y_nbchildren10-2026-07-16_15-45"
+
+
+# ==================================================== #
 # DIRECTORIES
 # ==================================================== #
 root_dir = os.getcwd()
 inp_dir = os.path.join("/marbec-data","Fish4Nutrition", "malpolon-marbec", "examples", "malnutrition", "data", "inputs")
 raw_dir = os.path.join("/marbec-data","Fish4Nutrition", "malpolon-marbec", "examples", "malnutrition", "data", "raw", "v2")
-plot_dir = os.path.join(root_dir, "examples", "malnutrition", "outputs")
+dhs_dir = os.path.join("/marbec-data","Fish4Nutrition", "malpolon-marbec", "examples", "malnutrition", "data", "raw")
+plot_dir = os.path.join(root_dir, "examples", "malnutrition", "outputs", study_name, "inputs")
 
 
 # ==================================================== #
 # LOAD DATA
 # ==================================================== #
 # load dhs data
-dhs_data = pd.read_csv(os.path.join(raw_dir, "dhs_malnutrition_prevalence_by_cluster.csv"))
+dhs_data = pd.read_csv(os.path.join(dhs_dir, "dhs_malnutrition_prevalence_by_cluster.csv"))
 n_dhs_data = len(dhs_data)
 
 # load malpolon data
@@ -31,16 +40,11 @@ malpolon_df = pd.read_csv(os.path.join(inp_dir, "malnutrition_dataset_malpolon_%
 
 
 # ==================================================== #
-# PARAMETERS
-# ==================================================== #
-modalities = ["mod_bb20km_123y", "mod_bb50km_123y", "mod_bb100km_123y"]#, "mod_images"]
-data_names = ["bb20km", "bb50km", "bb100km"]#, "images"]
-samples = np.random.randint(len(malpolon_df), size=1)
-
-
-# ==================================================== #
 # PLOTS
 # ==================================================== #
+# set samples to be plotted
+samples = np.random.randint(len(malpolon_df), size=10)
+
 # loop over samples
 for sample in samples:
 
@@ -81,3 +85,5 @@ for sample in samples:
 
         # save figure
         plt.savefig(os.path.join(plot_dir, "sample_%d_%s.png" % (sample, data_name)), dpi=50)
+        fig.clear()
+        plt.close(fig)
