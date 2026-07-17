@@ -304,48 +304,39 @@ def average_pooling_array(array, factor):
 # array = np.random.rand(1, 10*3, 10*3)
 # array_pooled = average_pooling_array(array, 3)
 
-
 # ================================================================================================ #
 # NEAR-SQUARE GRID LAYOUT
 # ================================================================================================ #
-# https://stackoverflow.com/questions/32017327/calculate-the-optimal-grid-layout-dimensions-for-a-given-amount-of-plots-in-r
-def get_largest_factor(n):
+def nearsq_grid_layout(n):
+
     """
-    Compute the largest factor of an integer. 
+    Compute by brute force search the near-square grid layout dimensions.
     
-    :param n: integer we want the largest factor.
+    :param n: integer we want the near-square layout dimensions.
     :type n: int
-    :return: the largest factor.
-    :rtype: int
+    :return: the near-square layout dimensions (a,b) minimising |n**0.5-a| + |n**0.5-b| constraining n<= a*b and a<=b.
+    :rtype: tuple(int, int)
             
     .. note::
         n>0.
     """
-    
-    k = math.floor(math.sqrt(n))
-    while(n % k != 0):
-        k = k-1
-    return(k)
 
-def nearsq_grid_layout(n, tol=5/3+0.001):
-    
-    """
-    Compute the near-square grid layout dimensions with a width-to-height ratio being smaller than a given tolerance.
-    
-    :param n: integer we want the near-square dimensions.
-    :type n: int
-    :param tol: tolerance.
-    :type tol: float
-    :return: the dimensions (a,b) such that n = a x b and a/b<tol.
-    :rtype: tuple(int, int)
-            
-    .. note::
-        n>0 and tol>1.
-    """
-    
-    m = math.ceil(math.sqrt(n)) ** 2
-    for i in range(n, m + 1):
-        a = get_largest_factor(i)
-        b = int(i/a)
-        if b/a < tol:
-            return (a, b)
+    # init
+    best_score = 2*n
+    ub = int(n**0.5)+1
+
+    # loop over possible values
+    for a in range(1, ub+1):
+        b = math.ceil(n/a)
+        score = abs(n**0.5-a) + abs(n**0.5-b)
+
+        # update score and keep solution
+        if (score < best_score):
+            best_score, solution = score, (a, b)
+
+    return solution
+
+# # examples
+# for n in range(1,100):
+#     a, b = nearsq_grid_layout(n)
+#     print("%d: %d x %d = %d" % (n, a, b, a*b))
